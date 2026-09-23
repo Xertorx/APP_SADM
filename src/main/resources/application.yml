@@ -1,0 +1,72 @@
+quarkus:
+  application:
+    name: Gestion Adopcion Mascotas - SADM
+    version: 1.0-SNAPSHOT
+
+  # HTTP
+  http:
+    port: 8862
+    host: localhost
+    root-path: SADM
+    cors: true
+    cors-origins: '*'
+    cors-methods: GET,POST,PUT,DELETE,OPTIONS
+    cors-headers: Content-Type,Authorization,X-Requested-With
+
+
+  # Base de datos
+  datasource:
+    db-kind: postgresql
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    jdbc:
+      url: ${DB_URL}
+
+  test:
+    continuous-testing: disabled
+    # Para activar las pruebas continuas, cambia "disabled" por "enabled":
+    # continuous-testing: enabled
+
+  hibernate-orm:
+    schema-management:
+      strategy: update
+    log:
+      sql: true
+
+  # Configuracion de Logs
+  log:
+    level: INFO
+    console:
+      enabled: true
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e%n"
+      dark-launch: true
+
+    file:
+      enabled: true
+      path: logs/gtecno.log
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e%n"
+      rotation:
+        max-file-size: 5M # Tamaño máximo
+        max-backup-index: 5 # Archivos conservados
+        file-suffix: yyyy-MM-dd #Sufijo de retación
+
+  swagger-ui:
+    enabled: true
+    always-include: true
+    path: "/swagger-ui"
+    title: "Gestion de Adopcion Mascotas - SADM"
+    description: "API generado en Quarkus para gestion de Adopcion Mascotas"
+    version: "V1"
+    contact-name: ""
+
+  mp:
+    openapi:
+      extensions:
+        smallrye:
+          info:
+            title: "Gestion de Adopcion Mascotas - SADM"
+            version: "1.1.0"
+
+# Perfil dev: deshabilita el log a archivo. El hot-reload de Quarkus dev mode
+# reinicializa el logging en cada cambio y, en Windows, el archivo puede seguir
+# bloqueado por el proceso anterior, provocando FileSystemException al rotar/renombrar.
