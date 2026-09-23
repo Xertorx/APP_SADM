@@ -1,4 +1,4 @@
-package ucentral.edu;
+package ucentral.edu.sadm;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
