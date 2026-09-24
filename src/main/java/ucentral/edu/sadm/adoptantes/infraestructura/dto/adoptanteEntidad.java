@@ -39,7 +39,7 @@ public record adoptanteEntidad (
         @NotBlank(message = "La contraseña es obligatoria")
         @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
         @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$", message = "La contraseña debe contener al menos una letra y un número")
-         String contraseña,
+        String contraseña,
 
         @NotBlank(message = "El teléfono es obligatorio")
         @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "El teléfono debe contener entre 7 y 15 dígitos")

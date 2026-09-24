@@ -1,56 +1,45 @@
 package ucentral.edu.sadm.common;
 
-
 import jakarta.validation.ConstraintViolationException;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import ucentral.edu.sadm.common.infraestructure.ResponseApi;
-import ucentral.edu.sadm.common.infraestructure.ResponseApiError;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
 
 @Provider
 public class ValidationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
-    @Context
-    UriInfo uriInfo;
 
     @Override
     public Response toResponse(ConstraintViolationException exception) {
-        var responseApi = new ResponseApi();
-        responseApi.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-        responseApi.setTimestamp(Instant.now().toString());
-        responseApi.setPath(uriInfo.getPath());
-        responseApi.setSucces(false);
-        responseApi.setCodigo("Petición invalida");
-        responseApi.setMensaje("Error de validación en los datos de entrada");
 
-        var responseApiError = ResponseApiError.builder()
-                .mensaje(exception.getMessage())
-                .codigo("CERT-ERR-V1")
-                .build();
-        responseApi.setError(responseApiError);
+        Map<String, String> errores = new HashMap<>();
 
-        List<String> errors = exception.getConstraintViolations()
-                .stream()
-                .map(violation -> {
-                    String propertyPath = violation.getPropertyPath().toString();
-                    // Simplificar el path si es muy largo
-                    if (propertyPath.contains(".")) {
-                        propertyPath = propertyPath.substring(propertyPath.lastIndexOf('.') + 1);
-                    }
-                    return String.format("%s: %s", propertyPath, violation.getMessage());
-                })
-                .collect(Collectors.toList());
+        exception.getConstraintViolations()
+                .forEach(error -> {
+                    String path = error.getPropertyPath().toString();
+                    String campo = path.contains(".")
+                            ? path.substring(path.lastIndexOf('.') + 1)
+                            : path;
+                    errores.put(campo, error.getMessage());
+                });
 
-        responseApiError.setDetalles(errors);
-        System.out.println(errors);
-        return Response.status(Response.Status.BAD_REQUEST)
-                .entity(responseApi)
+        ResponseApi<Map<String, String>> response =
+                new ResponseApi<>(
+                        400,
+                        "Error de validación",
+                        errores
+                );
+
+        return Response
+                .status(Response.Status.BAD_REQUEST)
+                .entity(response)
                 .build();
     }
+
 }
+
+

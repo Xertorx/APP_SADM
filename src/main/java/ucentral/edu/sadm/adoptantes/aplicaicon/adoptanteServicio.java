@@ -6,7 +6,9 @@ import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 import ucentral.edu.sadm.adoptantes.dominio.adoptante;
 import ucentral.edu.sadm.adoptantes.dominio.adoptanteRepositorio;
+import ucentral.edu.sadm.adoptantes.dominio.exception.EmailAlreadyExistsException;
 import ucentral.edu.sadm.adoptantes.infraestructura.dto.adoptanteEntidad;
+import ucentral.edu.sadm.common.service.PasswordService;
 
 import java.util.List;
 
@@ -16,24 +18,34 @@ public class adoptanteServicio {
 
     @Inject
     adoptanteRepositorio adoptanteRepositorio;
+    @Inject
+    PasswordService passwordService;
+
     @Transactional
     public void crear(adoptanteEntidad adoptanteEntidad){
-        // Se mapea el Dto que llega por el Entity
+
+        if(adoptanteRepositorio.findByEmail(adoptanteEntidad.correo()) != null){
+
+            throw new EmailAlreadyExistsException();
+        }
+
         adoptante adoptante = new adoptante(
                 adoptanteEntidad.nombre(),
                 adoptanteEntidad.apellido(),
                 adoptanteEntidad.identificacion(),
                 adoptanteEntidad.fecha_nacimiento(),
                 adoptanteEntidad.correo(),
-                adoptanteEntidad.contraseña(),
+                passwordService.hash(adoptanteEntidad.contraseña()),
                 adoptanteEntidad.telefono(),
                 adoptanteEntidad.direccion(),
                 adoptanteEntidad.tipo_usuario(),
                 adoptanteEntidad.estado()
         );
-
         adoptanteRepositorio.persist(adoptante);
+
     }
+
+
 
     public List<adoptanteEntidad> consultarTodos() {
         List<adoptante> adoptantes = adoptanteRepositorio.listAll();

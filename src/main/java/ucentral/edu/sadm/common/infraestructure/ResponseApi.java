@@ -1,24 +1,29 @@
 package ucentral.edu.sadm.common.infraestructure;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.time.Instant;
-@Data
-public class ResponseApi {
-    private String mensaje;
-    private String codigo;
-    private String timestamp;
-    private String path;
-    private int status;
-    private boolean succes;
-    private ResponseApiError error;
 
-    public ResponseApi() {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ResponseApi<T> {
+    public int status;
+    public String message;
+    public T data;
+
+    public ResponseApi( ) {
+    }
+    public ResponseApi(int status ) {
+        this.status = status;
+    }
+    public ResponseApi(int status, String message ) {
+        this.status = status;
+        this.message = message;
+    }
+    public ResponseApi(int status, String message, T data) {
+        this.status = status;
+        this.message = message;
+        this.data = data;
     }
 
-    public ResponseApi(String mensaje, String codigo) {
-        this.mensaje = mensaje;
-        this.codigo = codigo;
-        this.timestamp = Instant.now().toString();
-    }
 }
