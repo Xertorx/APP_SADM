@@ -10,6 +10,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import ucentral.edu.sadm.adoptantes.aplicaicon.adoptanteServicio;
 import ucentral.edu.sadm.adoptantes.infraestructura.dto.adoptanteEntidad;
+import ucentral.edu.sadm.common.infraestructure.ResponseApi;
 
 import java.util.List;
 
@@ -26,17 +27,14 @@ public class adoptanteRecursos {
             summary = "Crear un nuevo adoptante",
             description = "Registra los datos del adoptante"
     )
-    @APIResponse(
-            responseCode = "201",
-            description = "Adoptante creado Exitosamente"
-    )
-    @APIResponse(
-            responseCode = "400",
-            description = "Datos de entrada invalidos"
-    )
     public Response crear(@Valid adoptanteEntidad adoptanteEntidad){
         this.adoptanteServicio.crear(adoptanteEntidad);
-        return Response.status(Response.Status.CREATED).build();
+        ResponseApi<List<adoptanteEntidad>> response =
+                new ResponseApi<>(
+                        201,
+                        "Adoptante creado correctamente"
+                );
+        return Response.status(Response.Status.CREATED).entity(response).build();
     }
 
 
