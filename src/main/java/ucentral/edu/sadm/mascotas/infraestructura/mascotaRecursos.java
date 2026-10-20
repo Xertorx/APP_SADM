@@ -1,6 +1,7 @@
 package ucentral.edu.sadm.mascotas.infraestructura;
 
 import jakarta.inject.Inject;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
@@ -12,6 +13,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import io.quarkus.security.identity.SecurityIdentity;
 import ucentral.edu.sadm.common.infraestructure.ResponseApi;
 import ucentral.edu.sadm.mascotas.aplicaicon.mascotaServicio;
 import ucentral.edu.sadm.mascotas.dominio.fotoMascota;
@@ -21,10 +23,13 @@ import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaFormulario;
 
 import java.util.List;
 
-@Path("/mascotas")
+@Path("api/mascotas")
 public class mascotaRecursos {
     @Inject
     mascotaServicio mascotaServicio;
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     @POST
     @Path("/crear")
@@ -34,8 +39,13 @@ public class mascotaRecursos {
             summary = "Publicar una mascota",
             description = "Registra los datos y las fotos de una mascota; queda pendiente de aprobación"
     )
+    @RolesAllowed({"USUARIO", "FUNDACION"})
     public Response crear(@Valid @BeanParam mascotaFormulario formulario) {
-        Long id = this.mascotaServicio.crear(formulario.datos, formulario.fotos);
+        Long id = this.mascotaServicio.crear(
+                formulario.datos,
+                formulario.fotos,
+                securityIdentity.getPrincipal().getName()
+        );
         ResponseApi<mascotaCreadaEntidad> response = new ResponseApi<>(
                 201,
                 "Tu publicación fue enviada y está en revisión por el administrador",

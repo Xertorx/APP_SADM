@@ -4,7 +4,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ucentral.edu.sadm.postulaciones.PostulacionTestFixtures;
+import ucentral.edu.sadm.postulacionesMascotas.PostulacionTestFixtures;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.hasSize;
 
 @QuarkusTest
 class MascotaRecursosTest {
-    private static final String BASE_PATH = "/mascotas";
+    private static final String BASE_PATH = "/api/mascotas";
 
     @Inject
     PostulacionTestFixtures fixtures;

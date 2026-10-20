@@ -69,8 +69,17 @@ quarkus:
             title: "Gestion de Adopcion Mascotas - SADM"
             version: "1.1.0"
 
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:900}
+
 # Perfil de pruebas: base efímera independiente de las credenciales locales.
 "%test":
+  app:
+    jwt:
+      secret: test-secret-for-jwt-signing-must-be-at-least-32-bytes
+      expiration-seconds: 900
   quarkus:
     datasource:
       db-kind: h2
