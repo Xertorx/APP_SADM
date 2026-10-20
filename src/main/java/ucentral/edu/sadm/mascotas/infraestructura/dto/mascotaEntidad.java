@@ -10,12 +10,6 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record mascotaEntidad(
-
-        // TODO HU02: tomar del usuario autenticado en vez de recibirlo del cliente
-        @NotNull(message = "El id del dador es obligatorio")
-        @Positive(message = "El id del dador debe ser un número positivo")
-        Long idDador,
-
         @NotBlank(message = "El nombre es obligatorio")
         @Size(min = 2, max = 50, message = "El nombre debe tener entre 2 y 50 caracteres")
         String nombre,

@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import ucentral.edu.sadm.adoptantes.dominio.adoptante;
+import ucentral.edu.sadm.usuarios.dominio.usuario;
 
 import java.util.Date;
 import java.util.List;
@@ -43,7 +43,7 @@ public class mascota extends PanacheEntity {
 
     @ManyToOne
     @JoinColumn(name = "dador_id")
-    public adoptante dador;
+    public usuario dador;
 
     @ElementCollection
     @CollectionTable(name = "mascota_temperamento", joinColumns = @JoinColumn(name = "mascota_id"))

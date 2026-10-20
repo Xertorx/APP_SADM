@@ -5,8 +5,12 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
-import ucentral.edu.sadm.adoptantes.dominio.adoptante;
-import ucentral.edu.sadm.adoptantes.dominio.adoptanteRepositorio;
+import ucentral.edu.sadm.usuarios.dominio.usuario;
+import ucentral.edu.sadm.usuarios.dominio.usuarioRepositorio;
+import ucentral.edu.sadm.usuarios.dominio.rolUsuario;
+import ucentral.edu.sadm.fundaciones.dominio.fundacion;
+import ucentral.edu.sadm.fundaciones.dominio.fundacionRepositorio;
+import ucentral.edu.sadm.common.infraestructure.BusinessException;
 import ucentral.edu.sadm.mascotas.dominio.exception.DadorNoEncontradoException;
 import ucentral.edu.sadm.mascotas.dominio.exception.FotoNoEncontradaException;
 import ucentral.edu.sadm.mascotas.dominio.exception.FotosInvalidasException;
@@ -38,15 +42,23 @@ public class mascotaServicio {
     @Inject
     fotoMascotaRepositorio fotoMascotaRepositorio;
     @Inject
-    adoptanteRepositorio adoptanteRepositorio;
+    usuarioRepositorio usuarioRepositorio;
+    @Inject
+    fundacionRepositorio fundacionRepositorio;
 
     @Transactional
-    public Long crear(mascotaEntidad mascotaEntidad, List<FileUpload> fotos) {
+    public Long crear(mascotaEntidad mascotaEntidad, List<FileUpload> fotos, String correoDador) {
         validarFotos(fotos);
 
-        adoptante dador = adoptanteRepositorio.findById(mascotaEntidad.idDador());
+        usuario dador = usuarioRepositorio.findByEmail(correoDador);
         if (dador == null) {
             throw new DadorNoEncontradoException();
+        }
+        if (dador.rol == rolUsuario.FUNDACION) {
+            fundacion perfil = fundacionRepositorio.find("usuario.id", dador.id).firstResult();
+            if (perfil == null || !"APROBADA".equals(perfil.estado)) {
+                throw new BusinessException(403, "La fundación aún no está aprobada para publicar mascotas");
+            }
         }
 
         mascota mascota = new mascota(
