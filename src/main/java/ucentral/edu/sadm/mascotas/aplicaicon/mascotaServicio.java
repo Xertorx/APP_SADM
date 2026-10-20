@@ -73,6 +73,35 @@ public class mascotaServicio {
 
         return mascota.id;
     }
+    public List<mascotaDetalleEntidad> consultarTodas() {
+        List<mascota> mascotas = mascotaRepositorio.listarTodas();
+        List<mascotaDetalleEntidad> detalles = mascotas.stream()
+                .map(m -> {
+                    List<Long> fotosIds = fotoMascotaRepositorio.listarPorMascota(m.id).stream()
+                            .map(f -> f.id)
+                            .toList();
+                    return new mascotaDetalleEntidad(
+                            m.id,
+                            m.nombre,
+                            m.especie,
+                            m.raza,
+                            m.edad,
+                            m.unidad_edad,
+                            m.tamano,
+                            m.sexo,
+                            m.temperamento,
+                            m.historial_salud,
+                            m.ubicacion,
+                            m.estado,
+                            m.fecha_publicacion,
+                            m.dador == null ? null : m.dador.id,
+                            fotosIds
+                    );
+                })
+                .toList();
+
+        return detalles;
+    }
 
     public mascotaDetalleEntidad consultar(Long id) {
         mascota mascota = mascotaRepositorio.findById(id);

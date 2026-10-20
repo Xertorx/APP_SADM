@@ -69,6 +69,19 @@ quarkus:
             title: "Gestion de Adopcion Mascotas - SADM"
             version: "1.1.0"
 
+# Perfil de pruebas: base efímera independiente de las credenciales locales.
+"%test":
+  quarkus:
+    datasource:
+      db-kind: h2
+      username: sa
+      password: sa
+      jdbc:
+        url: jdbc:h2:mem:sadm;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    hibernate-orm:
+      schema-management:
+        strategy: drop-and-create
+
 # Perfil dev: deshabilita el log a archivo. El hot-reload de Quarkus dev mode
 # reinicializa el logging en cada cambio y, en Windows, el archivo puede seguir
 # bloqueado por el proceso anterior, provocando FileSystemException al rotar/renombrar.
