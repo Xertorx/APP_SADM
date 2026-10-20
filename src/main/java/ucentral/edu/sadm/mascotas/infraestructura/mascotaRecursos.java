@@ -2,6 +2,7 @@ package ucentral.edu.sadm.mascotas.infraestructura;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -11,13 +12,14 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.jboss.resteasy.reactive.MultipartForm;
 import ucentral.edu.sadm.common.infraestructure.ResponseApi;
 import ucentral.edu.sadm.mascotas.aplicaicon.mascotaServicio;
 import ucentral.edu.sadm.mascotas.dominio.fotoMascota;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaCreadaEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaDetalleEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaFormulario;
+
+import java.util.List;
 
 @Path("/mascotas")
 public class mascotaRecursos {
@@ -32,7 +34,7 @@ public class mascotaRecursos {
             summary = "Publicar una mascota",
             description = "Registra los datos y las fotos de una mascota; queda pendiente de aprobación"
     )
-    public Response crear(@Valid @MultipartForm mascotaFormulario formulario) {
+    public Response crear(@Valid @BeanParam mascotaFormulario formulario) {
         Long id = this.mascotaServicio.crear(formulario.datos, formulario.fotos);
         ResponseApi<mascotaCreadaEntidad> response = new ResponseApi<>(
                 201,
@@ -49,6 +51,16 @@ public class mascotaRecursos {
     public Response consultar(@PathParam("id") Long id) {
         mascotaDetalleEntidad datos = this.mascotaServicio.consultar(id);
         ResponseApi<mascotaDetalleEntidad> response = new ResponseApi<>(200, "Consulta exitosa", datos);
+        return Response.status(Response.Status.OK).entity(response).build();
+    }
+
+    @GET
+    @Path("")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Consultar todas las mascotas publicadas")
+    public Response consultar() {
+        List<mascotaDetalleEntidad> datos = this.mascotaServicio.consultarTodas();
+        ResponseApi<List<mascotaDetalleEntidad>> response = new ResponseApi<>(200, "Consulta exitosa", datos);
         return Response.status(Response.Status.OK).entity(response).build();
     }
 

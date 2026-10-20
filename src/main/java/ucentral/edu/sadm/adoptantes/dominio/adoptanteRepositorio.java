@@ -10,4 +10,5 @@ public class adoptanteRepositorio implements PanacheRepository<adoptante> {
         return find("correo", email).firstResult();
     }
 
+
 }

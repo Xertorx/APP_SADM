@@ -9,7 +9,7 @@ import java.util.List;
 public class fotoMascotaRepositorio implements PanacheRepository<fotoMascota> {
 
     public List<fotoMascota> listarPorMascota(Long mascotaId) {
-        return list("mascota.id", mascotaId);
+        return list("mascota.id = ?1 order by orden asc", mascotaId);
     }
 
 }
