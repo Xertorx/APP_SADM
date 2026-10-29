@@ -58,27 +58,25 @@ public class mascotaRecursos {
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Consultar una mascota publicada")
-    public Response consultar(@PathParam("id") Long id) {
+    public mascotaDetalleEntidad consultar(@PathParam("id") Long id) {
         mascotaDetalleEntidad datos = this.mascotaServicio.consultar(id);
-        ResponseApi<mascotaDetalleEntidad> response = new ResponseApi<>(200, "Consulta exitosa", datos);
-        return Response.status(Response.Status.OK).entity(response).build();
+        return datos;
     }
 
     @GET
     @Path("")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Consultar todas las mascotas publicadas")
-    public Response consultar() {
+    public List<mascotaDetalleEntidad> consultar() {
         List<mascotaDetalleEntidad> datos = this.mascotaServicio.consultarTodas();
-        ResponseApi<List<mascotaDetalleEntidad>> response = new ResponseApi<>(200, "Consulta exitosa", datos);
-        return Response.status(Response.Status.OK).entity(response).build();
+        return datos;
     }
 
     @GET
     @Path("/fotos/{idFoto}")
     @Operation(summary = "Obtener los bytes de una foto de mascota")
-    public Response consultarFoto(@PathParam("idFoto") Long idFoto) {
+    public fotoMascota consultarFoto(@PathParam("idFoto") Long idFoto) {
         fotoMascota foto = this.mascotaServicio.consultarFoto(idFoto);
-        return Response.ok(foto.datos).type(foto.tipo_contenido).build();
+        return foto;
     }
 }

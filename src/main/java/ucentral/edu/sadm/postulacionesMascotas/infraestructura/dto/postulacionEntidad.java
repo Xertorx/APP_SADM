@@ -47,7 +47,11 @@ public record postulacionEntidad(
         @NotNull(message = "Debe indicarse si el adoptante puede postularse")
         Boolean puedePostularse,
         @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-        String motivo
+        String motivo,
+        @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+        Boolean postulacionActiva,
+        @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+        String mensaje
 ) {
     public interface Solicitud {
     }
@@ -60,16 +64,25 @@ public record postulacionEntidad(
             String estado,
             Integer puntaje
     ) {
-        return new postulacionEntidad(mascotaId, id, adoptanteId, fecha, estado, puntaje, null, null, null, null);
+        return new postulacionEntidad(
+                mascotaId, id, adoptanteId, fecha, estado, puntaje,
+                null, null, null, null, true, "Postulación creada correctamente"
+        );
     }
 
     public static postulacionEntidad resumen(
             MascotaResumen mascota,
             List<EtapaProceso> etapas,
             boolean puedePostularse,
-            String motivo
+            String motivo,
+            boolean postulacionActiva,
+            String estado,
+            String mensaje
     ) {
-        return new postulacionEntidad(null, null, null, null, null, null, mascota, etapas, puedePostularse, motivo);
+        return new postulacionEntidad(
+                null, null, null, null, estado, null, mascota, etapas,
+                puedePostularse, motivo, postulacionActiva, mensaje
+        );
     }
 
     public record MascotaResumen(

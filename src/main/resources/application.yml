@@ -23,6 +23,8 @@ quarkus:
     password: ${DB_PASSWORD}
     jdbc:
       url: ${DB_URL}
+      additional-jdbc-properties:
+        prepareThreshold: "0"
 
   test:
     continuous-testing: disabled

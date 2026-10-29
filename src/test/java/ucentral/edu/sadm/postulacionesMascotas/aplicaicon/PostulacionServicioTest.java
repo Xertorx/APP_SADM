@@ -77,7 +77,7 @@ class PostulacionServicioTest {
         var creada = servicio.crear(7L, 12L);
 
         assertNotNull(creada.fecha());
-        assertEquals("Etapa 1 en curso", creada.estado());
+        assertEquals("ETAPA_1_EN_CURSO", creada.estado());
         assertEquals(0, creada.puntaje());
         assertEquals(7L, creada.adoptanteId());
         assertEquals(12L, creada.mascotaId());
