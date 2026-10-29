@@ -49,16 +49,29 @@ public class postulacionServicio {
                 .map(f -> "/SADM/mascotas/fotos/" + f.id)
                 .orElse(null);
 
+        postulacion existente = postulacionRepositorio.buscarPorAdoptanteYMascota(adoptanteId, mascotaId);
+        boolean postulacionActiva = existente != null;
+        boolean disponible = estaDisponible(mascota);
         String motivo = null;
-        if (!estaDisponible(mascota)) {
-            motivo = "MASCOTA_NO_DISPONIBLE";
-        } else if (postulacionRepositorio.buscarPorAdoptanteYMascota(adoptanteId, mascotaId) != null) {
+        String mensaje;
+        if (postulacionActiva) {
             motivo = "POSTULACION_DUPLICADA";
+            mensaje = "Ya tienes una postulación activa para esta mascota";
+        } else if (!disponible) {
+            motivo = "MASCOTA_NO_DISPONIBLE";
+            mensaje = "Esta mascota no está disponible para postulación";
+        } else {
+            mensaje = "Puedes postularte a esta mascota";
         }
 
         return postulacionEntidad.resumen(
                 new postulacionEntidad.MascotaResumen(mascota.id, mascota.nombre, foto, mascota.especie, mascota.raza),
-                ETAPAS, motivo == null, motivo
+                ETAPAS,
+                disponible && !postulacionActiva,
+                motivo,
+                postulacionActiva,
+                postulacionActiva ? existente.estado.name() : null,
+                mensaje
         );
     }
 
@@ -156,7 +169,7 @@ public class postulacionServicio {
         return postulacionEntidad.creada(
                 postulacion.id, postulacion.mascota.id, postulacion.adoptante.id,
                 postulacion.fecha_postulacion,
-                postulacion.estado.getEtiqueta(),
+                postulacion.estado.name(),
                 postulacion.puntaje
         );
     }

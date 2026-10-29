@@ -49,16 +49,20 @@ public class postulacionRecursos {
     @APIResponse(
             responseCode = "200",
             description = "Resumen del proceso",
-            content = @Content(examples = @ExampleObject(value = """
-                    {"status":200,"message":"Consulta exitosa","data":{"mascota":{"id":12,"nombre":"Luna","foto":"/SADM/mascotas/fotos/4","especie":"Perro","raza":"Criollo"},"etapas":[{"nombre":"Revisión inicial","descripcion":"Validación de los datos y requisitos del adoptante."}],"puedePostularse":true,"motivo":null}}
-                    """))
-    )
-    @APIResponse(
-            responseCode = "409",
-            description = "Mascota no disponible o postulación previa",
-            content = @Content(examples = @ExampleObject(value = """
-                    {"status":409,"message":"La mascota no está disponible para postulación","data":{"codigo":"MASCOTA_NO_DISPONIBLE","detalle":"Solo se aceptan postulaciones para mascotas en estado Disponible"}}
-                    """))
+            content = @Content(examples = {
+                    @ExampleObject(
+                            name = "Postulación activa",
+                            value = """
+                                    {"status":200,"message":"Consulta exitosa","data":{"mascota":{"id":12,"nombre":"Luna","foto":"/SADM/mascotas/fotos/4","especie":"Perro","raza":"Criollo"},"etapas":[{"nombre":"Revisión inicial","descripcion":"Validación de los datos y requisitos del adoptante."}],"puedePostularse":false,"motivo":"POSTULACION_DUPLICADA","postulacionActiva":true,"estado":"ETAPA_1_EN_CURSO","mensaje":"Ya tienes una postulación activa para esta mascota"}}
+                                    """
+                    ),
+                    @ExampleObject(
+                            name = "Puede postularse",
+                            value = """
+                                    {"status":200,"message":"Consulta exitosa","data":{"mascota":{"id":12,"nombre":"Luna","foto":"/SADM/mascotas/fotos/4","especie":"Perro","raza":"Criollo"},"etapas":[{"nombre":"Revisión inicial","descripcion":"Validación de los datos y requisitos del adoptante."}],"puedePostularse":true,"postulacionActiva":false,"mensaje":"Puedes postularte a esta mascota"}}
+                                    """
+                    )
+            })
     )
     @APIResponse(
             responseCode = "404",
@@ -67,6 +71,8 @@ public class postulacionRecursos {
                     {"status":404,"message":"La mascota no existe","data":{"codigo":"MASCOTA_NO_ENCONTRADA","detalle":"No se encontró una mascota con el identificador solicitado"}}
                     """))
     )
+    @APIResponse(responseCode = "401", description = "Se requiere autenticación")
+    @APIResponse(responseCode = "403", description = "Se requiere el rol USUARIO")
     public Response resumen(@PathParam("mascotaId") Long mascotaId) {
         postulacionEntidad datos = postulacionServicio.resumen(mascotaId, obtenerAdoptanteId());
         return Response.ok(new ResponseApi<>(200, "Consulta exitosa", datos)).build();
@@ -83,7 +89,7 @@ public class postulacionRecursos {
             responseCode = "201",
             description = "Postulación creada",
             content = @Content(examples = @ExampleObject(value = """
-                    {"status":201,"message":"Postulación creada correctamente","data":{"id":34,"mascotaId":12,"adoptanteId":8,"fecha":"2026-10-14T23:30:00Z","estado":"Etapa 1 en curso","puntaje":0}}
+                    {"status":201,"message":"Postulación creada correctamente","data":{"id":34,"mascotaId":12,"adoptanteId":8,"fecha":"2026-10-14T23:30:00Z","estado":"ETAPA_1_EN_CURSO","puntaje":0,"postulacionActiva":true,"mensaje":"Postulación creada correctamente"}}
                     """))
     )
     @APIResponse(

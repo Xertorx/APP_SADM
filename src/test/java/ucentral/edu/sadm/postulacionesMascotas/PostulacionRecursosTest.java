@@ -49,7 +49,9 @@ class PostulacionRecursosTest {
                 .body("data.mascotaId", equalTo(datos.mascotaId().intValue()))
                 .body("data.adoptanteId", equalTo(datos.adoptanteId().intValue()))
                 .body("data.fecha", notNullValue())
-                .body("data.estado", equalTo("Etapa 1 en curso"))
+                .body("data.estado", equalTo("ETAPA_1_EN_CURSO"))
+                .body("data.postulacionActiva", equalTo(true))
+                .body("data.mensaje", equalTo("Postulación creada correctamente"))
                 .body("data.puntaje", equalTo(0));
     }
 
@@ -115,7 +117,7 @@ class PostulacionRecursosTest {
                 .then()
                 .statusCode(201)
                 .body("data.adoptanteId", equalTo(datos.adoptanteId().intValue()))
-                .body("data.estado", equalTo("Etapa 1 en curso"))
+                .body("data.estado", equalTo("ETAPA_1_EN_CURSO"))
                 .body("data.puntaje", equalTo(0));
     }
 
@@ -154,6 +156,8 @@ class PostulacionRecursosTest {
                 .then()
                 .statusCode(200)
                 .body("data.puedePostularse", equalTo(true))
+                .body("data.postulacionActiva", equalTo(false))
+                .body("data.mensaje", equalTo("Puedes postularte a esta mascota"))
                 .body("data.motivo", equalTo(null))
                 .body("data.mascota.nombre", equalTo("Luna"));
         assertEquals(0, fixtures.contarPostulaciones());
@@ -165,6 +169,9 @@ class PostulacionRecursosTest {
                 .then()
                 .statusCode(200)
                 .body("data.puedePostularse", equalTo(false))
+                .body("data.postulacionActiva", equalTo(true))
+                .body("data.estado", equalTo("ETAPA_1_EN_CURSO"))
+                .body("data.mensaje", equalTo("Ya tienes una postulación activa para esta mascota"))
                 .body("data.motivo", equalTo("POSTULACION_DUPLICADA"));
     }
 
@@ -176,6 +183,8 @@ class PostulacionRecursosTest {
                 .then()
                 .statusCode(200)
                 .body("data.puedePostularse", equalTo(false))
+                .body("data.postulacionActiva", equalTo(false))
+                .body("data.mensaje", equalTo("Esta mascota no está disponible para postulación"))
                 .body("data.motivo", equalTo("MASCOTA_NO_DISPONIBLE"));
     }
 
