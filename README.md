@@ -14,6 +14,9 @@ Rutas públicas:
 | `POST /SADM/api/autenticacion/login` | Autentica por correo y contraseña y devuelve un JWT. |
 | `GET /SADM/api/mascotas` | Lista mascotas. |
 | `GET /SADM/api/mascotas/{id}` | Consulta una mascota. |
+| `GET /SADM/api/mascotas/mis-publicaciones` | Lista las mascotas del dador autenticado (`USUARIO` o `FUNDACION`). |
+| `GET /SADM/api/mascotas/{id}/editar` | Consulta, para el dador propietario, los datos precargables y advierte si existen postulaciones activas. |
+| `PUT /SADM/api/mascotas/{id}` | Actualiza una publicación del dador autenticado. Recibe `multipart/form-data` con `datos` (el mismo JSON validado al publicar) y, opcionalmente, `fotos` (JPG/PNG, hasta 6 de máximo 5 MB); si no se envían fotos, conserva las existentes. |
 
 Después de crear una cuenta administrativa de confianza, un administrador de la base de datos puede asignarle el rol:
 
@@ -30,6 +33,7 @@ El login recibe `{"correo":"usuario@example.com","contraseña":"ClaveSegura123"}
 Los JWT están firmados con HS256 y expiran en 900 segundos por defecto. Configura `JWT_SECRET` con un secreto aleatorio de al menos 32 bytes; opcionalmente define `JWT_EXPIRATION_SECONDS`. No se incluye un secreto de producción en el repositorio. Al ser sesiones sin estado, un token no puede revocarse individualmente antes de expirar: el cliente debe volver a iniciar sesión al vencer.
 
 Roles protegidos: `USUARIO` puede postularse; `USUARIO` y `FUNDACION` pueden publicar mascotas; `ADMINISTRADOR` puede consultar usuarios/fundaciones y aprobar fundaciones. El identificador del dador se toma de la identidad autenticada, no del cuerpo de la petición.
+El formulario de edición requiere JWT con rol `USUARIO` o `FUNDACION`; solo el dador propietario puede consultarlo o guardar cambios.
 
 ## Postulación a una mascota
 

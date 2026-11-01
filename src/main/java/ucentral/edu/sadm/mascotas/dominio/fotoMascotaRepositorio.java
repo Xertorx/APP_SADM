@@ -12,4 +12,8 @@ public class fotoMascotaRepositorio implements PanacheRepository<fotoMascota> {
         return list("mascota.id = ?1 order by orden asc", mascotaId);
     }
 
+    public void eliminarPorMascota(Long mascotaId) {
+        delete("mascota.id = ?1", mascotaId);
+    }
+
 }

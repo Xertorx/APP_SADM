@@ -67,6 +67,12 @@ public class PostulacionTestFixtures {
     }
 
     @Transactional
+    public void asignarDador(Long mascotaId, Long dadorId) {
+        mascota mascota = mascotaRepositorio.findById(mascotaId);
+        mascota.dador = usuarioRepositorio.findById(dadorId);
+    }
+
+    @Transactional
     public long contarPostulaciones() {
         return postulacionRepositorio.count();
     }
