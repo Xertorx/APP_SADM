@@ -39,4 +39,7 @@ public class usuario extends PanacheEntity {
 
     @Column(nullable = false, length = 20)
     public String estado;
+
+    @Column(name = "fecha_registro")
+    public Date fecha_registro;
 }

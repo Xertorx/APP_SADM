@@ -153,4 +153,15 @@ public class mascotaRecursos {
         mascotaServicio.eliminar(id, securityIdentity.getPrincipal().getName());
         return Response.ok(new ResponseApi<>(200, "La publicación fue eliminada")).build();
     }
+
+    @GET
+    @Path("/fotos/{idFoto}/imagen")
+    @Operation(
+            summary = "Obtener la imagen de una foto de mascota",
+            description = "Devuelve los bytes con su Content-Type, para usarla directo en un <img> o en el navegador"
+    )
+    public Response consultarImagen(@PathParam("idFoto") Long idFoto) {
+        fotoMascota foto = this.mascotaServicio.consultarFoto(idFoto);
+        return Response.ok(foto.datos, foto.tipo_contenido).build();
+    }
 }

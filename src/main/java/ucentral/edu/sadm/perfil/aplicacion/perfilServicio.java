@@ -12,6 +12,7 @@ import ucentral.edu.sadm.perfil.dominio.fotoPerfil;
 import ucentral.edu.sadm.perfil.dominio.fotoPerfilRepositorio;
 import ucentral.edu.sadm.perfil.infraestructura.dto.perfilActualizacionEntidad;
 import ucentral.edu.sadm.perfil.infraestructura.dto.perfilEntidad;
+import ucentral.edu.sadm.perfil.infraestructura.dto.perfilPublicoEntidad;
 import ucentral.edu.sadm.usuarios.dominio.usuario;
 import ucentral.edu.sadm.usuarios.dominio.usuarioRepositorio;
 
@@ -88,6 +89,35 @@ public class perfilServicio {
             throw new PerfilNoEncontradoException("No tienes foto de perfil");
         }
         return foto;
+    }
+
+    /** Solo datos públicos del dador (HU11): sin correo, teléfono, dirección ni identificación. */
+    public perfilPublicoEntidad consultarPublico(Long usuarioId) {
+        usuario usuario = buscarUsuarioPorId(usuarioId);
+        return new perfilPublicoEntidad(
+                usuario.id,
+                usuario.nombre,
+                usuario.apellido,
+                fotoPerfilRepositorio.findByUsuarioId(usuario.id) != null,
+                usuario.fecha_registro
+        );
+    }
+
+    public fotoPerfil consultarFotoPublica(Long usuarioId) {
+        buscarUsuarioPorId(usuarioId);
+        fotoPerfil foto = fotoPerfilRepositorio.findByUsuarioId(usuarioId);
+        if (foto == null) {
+            throw new PerfilNoEncontradoException("El usuario no tiene foto de perfil");
+        }
+        return foto;
+    }
+
+    private usuario buscarUsuarioPorId(Long usuarioId) {
+        usuario usuario = usuarioRepositorio.findById(usuarioId);
+        if (usuario == null) {
+            throw new PerfilNoEncontradoException("El usuario no existe");
+        }
+        return usuario;
     }
 
     private usuario buscarUsuario(String correo) {
