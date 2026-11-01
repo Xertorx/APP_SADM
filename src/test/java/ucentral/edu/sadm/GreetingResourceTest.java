@@ -1,4 +1,4 @@
-package ucentral.edu;
+package ucentral.edu.sadm;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
