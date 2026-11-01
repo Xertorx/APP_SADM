@@ -166,7 +166,7 @@ public class mascotaServicio {
         return convertirDetalle(mascota);
     }
 
-    private mascotaDetalleEntidad convertirDetalle(mascota mascota) {
+    mascotaDetalleEntidad convertirDetalle(mascota mascota) {
         List<Long> fotosIds = fotoMascotaRepositorio.listarPorMascota(mascota.id).stream()
                 .map(f -> f.id)
                 .toList();

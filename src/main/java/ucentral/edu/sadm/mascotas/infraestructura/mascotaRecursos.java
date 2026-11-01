@@ -12,11 +12,13 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import io.quarkus.security.identity.SecurityIdentity;
 import ucentral.edu.sadm.common.infraestructure.ResponseApi;
+import ucentral.edu.sadm.mascotas.aplicaicon.mascotaBusquedaServicio;
 import ucentral.edu.sadm.mascotas.aplicaicon.mascotaServicio;
 import ucentral.edu.sadm.mascotas.dominio.fotoMascota;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaCreadaEntidad;
@@ -31,6 +33,9 @@ import java.util.List;
 public class mascotaRecursos {
     @Inject
     mascotaServicio mascotaServicio;
+
+    @Inject
+    mascotaBusquedaServicio mascotaBusquedaServicio;
 
     @Inject
     SecurityIdentity securityIdentity;
@@ -163,5 +168,34 @@ public class mascotaRecursos {
     public Response consultarImagen(@PathParam("idFoto") Long idFoto) {
         fotoMascota foto = this.mascotaServicio.consultarFoto(idFoto);
         return Response.ok(foto.datos, foto.tipo_contenido).build();
+    }
+
+    // ---- HU08-HU09: búsqueda por nombre y filtros ----
+
+    @GET
+    @Path("/buscar")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Buscar mascotas disponibles por nombre y filtros",
+            description = "Solo mascotas DISPONIBLES. Sin distinguir mayúsculas ni tildes. Filtros distintos con lógica Y; "
+                    + "valores repetidos de especie/edad/tamano con lógica O; temperamento exige todos los marcados"
+    )
+    public List<mascotaDetalleEntidad> buscar(
+            @QueryParam("nombre") String nombre,
+            @QueryParam("especie") List<String> especie,
+            @QueryParam("raza") String raza,
+            @QueryParam("edad") List<String> edad,
+            @QueryParam("tamano") List<String> tamano,
+            @QueryParam("temperamento") List<String> temperamento
+    ) {
+        return mascotaBusquedaServicio.buscar(nombre, especie, raza, edad, tamano, temperamento);
+    }
+
+    @GET
+    @Path("/razas")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Listar las razas de las mascotas disponibles de una especie")
+    public List<String> razas(@QueryParam("especie") String especie) {
+        return mascotaBusquedaServicio.razasPorEspecie(especie);
     }
 }
