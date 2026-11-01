@@ -7,6 +7,7 @@ import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -19,6 +20,7 @@ import ucentral.edu.sadm.mascotas.aplicaicon.mascotaServicio;
 import ucentral.edu.sadm.mascotas.dominio.fotoMascota;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaCreadaEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaDetalleEntidad;
+import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaEdicionEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaFormulario;
 
 import java.util.List;
@@ -64,12 +66,56 @@ public class mascotaRecursos {
     }
 
     @GET
+    @Path("/{id}/editar")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION"})
+    @Operation(summary = "Consultar los datos de una mascota para editar")
+    public Response consultarParaEditar(@PathParam("id") Long id) {
+        mascotaEdicionEntidad datos = mascotaServicio.consultarParaEditar(
+                id,
+                securityIdentity.getPrincipal().getName()
+        );
+        return Response.ok(new ResponseApi<>(200, "Formulario de edición", datos)).build();
+    }
+
+    @PUT
+    @Path("/{id}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION"})
+    @Operation(
+            summary = "Editar una publicación de mascota",
+            description = "Actualiza los datos validados; conserva las fotos existentes si no se envían fotos nuevas"
+    )
+    public Response actualizar(
+            @PathParam("id") Long id,
+            @Valid @BeanParam mascotaFormulario formulario
+    ) {
+        mascotaServicio.actualizar(
+                id,
+                formulario.datos,
+                formulario.fotos,
+                securityIdentity.getPrincipal().getName()
+        );
+        return Response.ok(new ResponseApi<>(200, "La publicación fue actualizada correctamente")).build();
+    }
+
+    @GET
     @Path("")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Consultar todas las mascotas publicadas")
     public List<mascotaDetalleEntidad> consultar() {
         List<mascotaDetalleEntidad> datos = this.mascotaServicio.consultarTodas();
         return datos;
+    }
+
+    @GET
+    @Path("/mis-publicaciones")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION"})
+    @Operation(summary = "Consultar las mascotas del dador autenticado")
+    public List<mascotaDetalleEntidad> consultarMisPublicaciones() {
+        return mascotaServicio.consultarDelDador(securityIdentity.getPrincipal().getName());
     }
 
     @GET

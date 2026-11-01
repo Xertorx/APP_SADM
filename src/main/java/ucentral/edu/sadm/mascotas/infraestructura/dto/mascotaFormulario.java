@@ -1,6 +1,7 @@
 package ucentral.edu.sadm.mascotas.infraestructura.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
@@ -12,6 +13,7 @@ public class mascotaFormulario {
 
     @RestForm("datos")
     @PartType(MediaType.APPLICATION_JSON)
+    @NotNull
     @Valid
     public mascotaEntidad datos;
 

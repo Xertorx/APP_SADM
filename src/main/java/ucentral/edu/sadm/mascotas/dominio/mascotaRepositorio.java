@@ -11,4 +11,8 @@ public class mascotaRepositorio implements PanacheRepository<mascota> {
     public List<mascota> listarTodas() {
         return listAll();
     }
+
+    public List<mascota> listarPorDador(Long dadorId) {
+        return list("dador.id = ?1", dadorId);
+    }
 }
