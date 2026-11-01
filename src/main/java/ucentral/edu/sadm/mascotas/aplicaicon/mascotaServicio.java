@@ -23,6 +23,10 @@ import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaDetalleEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaEdicionEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaEntidad;
 import ucentral.edu.sadm.postulacionesMascotas.dominio.postulacionRepositorio;
+import ucentral.edu.sadm.postulacionesMascotas.dominio.postulacion;
+import ucentral.edu.sadm.postulacionesMascotas.dominio.estadoPostulacion;
+import ucentral.edu.sadm.mascotas.dominio.notificadorCancelacion;
+import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaEliminacionEntidad;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -49,6 +53,8 @@ public class mascotaServicio {
     fundacionRepositorio fundacionRepositorio;
     @Inject
     postulacionRepositorio postulacionRepositorio;
+    @Inject
+    notificadorCancelacion notificadorCancelacion;
 
     @Transactional
     public Long crear(mascotaEntidad mascotaEntidad, List<FileUpload> fotos, String correoDador) {
@@ -150,7 +156,7 @@ public class mascotaServicio {
 
     public mascotaDetalleEntidad consultar(Long id) {
         mascota mascota = mascotaRepositorio.findById(id);
-        if (mascota == null) {
+        if (mascota == null || "ELIMINADA".equals(mascota.estado)) {
             throw new MascotaNoEncontradaException();
         }
         return consultar(mascota);
@@ -186,7 +192,7 @@ public class mascotaServicio {
 
     private mascota buscarMascotaPropietario(Long id, String correoDador) {
         mascota mascota = mascotaRepositorio.findById(id);
-        if (mascota == null) {
+        if (mascota == null || "ELIMINADA".equals(mascota.estado)) {
             throw new MascotaNoEncontradaException();
         }
         usuario dador = usuarioRepositorio.findByEmail(correoDador);
@@ -241,5 +247,70 @@ public class mascotaServicio {
         } catch (IOException e) {
             throw new UncheckedIOException("No se pudo leer la foto " + foto.fileName(), e);
         }
+    }
+
+    // ---- HU07: eliminación de la publicación ----
+
+    public mascotaEliminacionEntidad consultarParaEliminar(Long id, String correoDador) {
+        mascota mascota = buscarMascotaParaEliminar(id, correoDador);
+        Long primeraFotoId = fotoMascotaRepositorio.listarPorMascota(id).stream()
+                .map(f -> f.id)
+                .findFirst()
+                .orElse(null);
+        return new mascotaEliminacionEntidad(
+                mascota.id,
+                mascota.nombre,
+                mascota.especie,
+                mascota.raza,
+                mascota.edad,
+                mascota.unidad_edad,
+                mascota.fecha_publicacion,
+                primeraFotoId,
+                contarPostulacionesActivas(id)
+        );
+    }
+
+    /**
+     * Borrado lógico: la mascota queda ELIMINADA y sus postulaciones activas pasan a
+     * CANCELADA_POR_DADOR. Todo en una sola transacción (si algo falla, nada cambia).
+     */
+    @Transactional
+    public void eliminar(Long id, String correoDador) {
+        mascota mascota = buscarMascotaParaEliminar(id, correoDador);
+        mascota.estado = "ELIMINADA";
+
+        // Se cargan las entidades (no update masivo) para que corra @PreUpdate.
+        List<postulacion> activas = postulacionRepositorio.list(
+                "mascota.id = ?1 and estado = ?2", id, estadoPostulacion.ETAPA_1_EN_CURSO);
+        for (postulacion p : activas) {
+            p.estado = estadoPostulacion.CANCELADA_POR_DADOR;
+        }
+        for (postulacion p : activas) {
+            notificadorCancelacion.notificar(p.adoptante.correo, mascota.nombre);
+        }
+        LOG.infof("Mascota %d eliminada; %d postulaciones canceladas", id, activas.size());
+    }
+
+    private long contarPostulacionesActivas(Long mascotaId) {
+        return postulacionRepositorio.count(
+                "mascota.id = ?1 and estado = ?2", mascotaId, estadoPostulacion.ETAPA_1_EN_CURSO);
+    }
+
+    // Mismo patrón que buscarMascotaPropietario, con el mensaje 403 propio de eliminar.
+    private mascota buscarMascotaParaEliminar(Long id, String correoDador) {
+        mascota mascota = mascotaRepositorio.findById(id);
+        if (mascota == null || "ELIMINADA".equals(mascota.estado)) {
+            throw new MascotaNoEncontradaException();
+        }
+        usuario dador = usuarioRepositorio.findByEmail(correoDador);
+        if (dador == null || mascota.dador == null || !mascota.dador.id.equals(dador.id)) {
+            throw new BusinessException(
+                    403,
+                    "MASCOTA_NO_AUTORIZADA",
+                    "No puedes eliminar esta publicación",
+                    "Solo el dador propietario puede eliminar la publicación"
+            );
+        }
+        return mascota;
     }
 }

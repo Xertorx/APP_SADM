@@ -5,6 +5,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -21,6 +22,7 @@ import ucentral.edu.sadm.mascotas.dominio.fotoMascota;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaCreadaEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaDetalleEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaEdicionEntidad;
+import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaEliminacionEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaFormulario;
 
 import java.util.List;
@@ -124,5 +126,31 @@ public class mascotaRecursos {
     public fotoMascota consultarFoto(@PathParam("idFoto") Long idFoto) {
         fotoMascota foto = this.mascotaServicio.consultarFoto(idFoto);
         return foto;
+    }
+
+    @GET
+    @Path("/{id}/eliminacion")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION"})
+    @Operation(summary = "Consultar los datos para confirmar la eliminación de una publicación")
+    public Response consultarParaEliminar(@PathParam("id") Long id) {
+        mascotaEliminacionEntidad datos = mascotaServicio.consultarParaEliminar(
+                id,
+                securityIdentity.getPrincipal().getName()
+        );
+        return Response.ok(new ResponseApi<>(200, "Datos para eliminar", datos)).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION"})
+    @Operation(
+            summary = "Eliminar una publicación de mascota",
+            description = "Borrado lógico; cancela las postulaciones activas y notifica a los candidatos"
+    )
+    public Response eliminar(@PathParam("id") Long id) {
+        mascotaServicio.eliminar(id, securityIdentity.getPrincipal().getName());
+        return Response.ok(new ResponseApi<>(200, "La publicación fue eliminada")).build();
     }
 }
