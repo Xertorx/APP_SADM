@@ -9,10 +9,10 @@ import java.util.List;
 public class mascotaRepositorio implements PanacheRepository<mascota> {
 
     public List<mascota> listarTodas() {
-        return listAll();
+        return list("estado is null or estado <> 'ELIMINADA'");
     }
 
     public List<mascota> listarPorDador(Long dadorId) {
-        return list("dador.id = ?1", dadorId);
+        return list("dador.id = ?1 and (estado is null or estado <> 'ELIMINADA')", dadorId);
     }
 }
