@@ -11,6 +11,7 @@ import ucentral.edu.sadm.usuarios.dominio.exception.EmailAlreadyExistsException;
 import ucentral.edu.sadm.usuarios.infraestructura.dto.usuarioPublicoEntidad;
 import ucentral.edu.sadm.usuarios.infraestructura.dto.usuarioRegistroEntidad;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -41,6 +42,7 @@ public class usuarioServicio {
         usuario.direccion = datos.direccion().trim();
         usuario.rol = rolUsuario.USUARIO;
         usuario.estado = "ACTIVO";
+        usuario.fecha_registro = new Date();
         usuarioRepositorio.persist(usuario);
         return usuario.id;
     }

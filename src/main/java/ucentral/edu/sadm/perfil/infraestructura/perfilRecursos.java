@@ -9,6 +9,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.CacheControl;
 import jakarta.ws.rs.core.MediaType;
@@ -19,6 +20,7 @@ import ucentral.edu.sadm.perfil.aplicacion.perfilServicio;
 import ucentral.edu.sadm.perfil.dominio.fotoPerfil;
 import ucentral.edu.sadm.perfil.infraestructura.dto.perfilEntidad;
 import ucentral.edu.sadm.perfil.infraestructura.dto.perfilFormulario;
+import ucentral.edu.sadm.perfil.infraestructura.dto.perfilPublicoEntidad;
 
 /** El usuario siempre sale del token (SecurityIdentity); nunca de un id en la ruta. */
 @Path("api/perfil")
@@ -58,6 +60,30 @@ public class perfilRecursos {
     @Operation(summary = "Descargar mi foto de perfil")
     public Response consultarFoto() {
         fotoPerfil foto = perfilServicio.consultarFoto(correoAutenticado());
+        CacheControl sinCache = new CacheControl();
+        sinCache.setNoCache(true);
+        return Response.ok(foto.datos, foto.tipo_contenido).cacheControl(sinCache).build();
+    }
+
+    @GET
+    @Path("/publico/{usuarioId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION", "ADMINISTRADOR"})
+    @Operation(
+            summary = "Consultar el perfil público de un usuario (dador)",
+            description = "Solo nombre, apellido, si tiene foto y desde cuándo es miembro; nunca datos de contacto"
+    )
+    public Response consultarPublico(@PathParam("usuarioId") Long usuarioId) {
+        perfilPublicoEntidad perfil = perfilServicio.consultarPublico(usuarioId);
+        return Response.ok(new ResponseApi<>(200, "Perfil público consultado", perfil)).build();
+    }
+
+    @GET
+    @Path("/publico/{usuarioId}/foto")
+    @RolesAllowed({"USUARIO", "FUNDACION", "ADMINISTRADOR"})
+    @Operation(summary = "Descargar la foto de perfil pública de un usuario (dador)")
+    public Response consultarFotoPublica(@PathParam("usuarioId") Long usuarioId) {
+        fotoPerfil foto = perfilServicio.consultarFotoPublica(usuarioId);
         CacheControl sinCache = new CacheControl();
         sinCache.setNoCache(true);
         return Response.ok(foto.datos, foto.tipo_contenido).cacheControl(sinCache).build();
