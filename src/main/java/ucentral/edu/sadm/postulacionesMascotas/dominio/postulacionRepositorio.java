@@ -13,4 +13,10 @@ public class postulacionRepositorio implements PanacheRepository<postulacion> {
     public boolean tieneActivasParaMascota(Long mascotaId) {
         return count("mascota.id = ?1 and estado = ?2", mascotaId, estadoPostulacion.ETAPA_1_EN_CURSO) > 0;
     }
+
+    // ---- HU21: Mis postulaciones ----
+    public java.util.List<postulacion> listarPorAdoptante(Long adoptanteId) {
+        return find("select p from postulacion p join fetch p.mascota m join fetch m.dador "
+                + "where p.adoptante.id = ?1 order by p.fecha_postulacion desc", adoptanteId).list();
+    }
 }

@@ -121,6 +121,30 @@ public class postulacionRecursos {
                 .build();
     }
 
+    // ---- HU21: Mis postulaciones ----
+    @Inject
+    ucentral.edu.sadm.postulacionesMascotas.aplicaicon.misPostulacionesServicio misPostulacionesServicio;
+
+    @GET
+    @Path("/postulaciones/mias")
+    @Operation(
+            summary = "Listar mis postulaciones",
+            description = "Postulaciones del adoptante autenticado (más reciente primero) con mascota, dador, etapa 1-4, puntaje y estado"
+    )
+    @APIResponse(
+            responseCode = "200",
+            description = "Lista de postulaciones (vacía si no se ha postulado)",
+            content = @Content(examples = @ExampleObject(value = """
+                    {"status":200,"message":"Consulta exitosa","data":[{"id":34,"fechaPostulacion":"2026-10-14T23:30:00Z","mascotaId":12,"mascotaNombre":"Luna","primeraFotoId":4,"dadorNombre":"Carlos Ruiz","nombreProceso":"Proceso de adopción de Luna","etapaActual":1,"totalEtapas":4,"puntaje":0,"estado":"ACTIVA","estadoEtiqueta":"Activa","estadoDetalle":"Etapa 1 en curso","fechaActualizacion":"2026-10-14T23:30:00Z"}]}
+                    """))
+    )
+    @APIResponse(responseCode = "401", description = "Se requiere autenticación")
+    @APIResponse(responseCode = "403", description = "Se requiere el rol USUARIO")
+    public Response misPostulaciones() {
+        return Response.ok(new ResponseApi<>(200, "Consulta exitosa",
+                misPostulacionesServicio.listar(obtenerAdoptanteId()))).build();
+    }
+
     private Long obtenerAdoptanteId() {
         usuario adoptante = usuarioRepositorio.findByEmail(securityIdentity.getPrincipal().getName());
         if (adoptante == null) {
