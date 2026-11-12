@@ -156,7 +156,9 @@ public class mascotaServicio {
 
     public mascotaDetalleEntidad consultar(Long id) {
         mascota mascota = mascotaRepositorio.findById(id);
-        if (mascota == null || "ELIMINADA".equals(mascota.estado)) {
+        // HU27-HU28: el detalle público no muestra mascotas de un dador INHABILITADO.
+        if (mascota == null || "ELIMINADA".equals(mascota.estado)
+                || (mascota.dador != null && "INHABILITADO".equalsIgnoreCase(mascota.dador.estado))) {
             throw new MascotaNoEncontradaException();
         }
         return consultar(mascota);

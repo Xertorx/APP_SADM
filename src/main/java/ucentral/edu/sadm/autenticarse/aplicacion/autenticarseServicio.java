@@ -25,8 +25,14 @@ public class autenticarseServicio {
     public loginRespuesta iniciarSesion(loginSolicitud solicitud) {
         usuario usuario = usuarioRepositorio.findByEmail(solicitud.correo());
         if (usuario == null
-                || !"ACTIVO".equalsIgnoreCase(usuario.estado)
                 || !passwordService.verificar(solicitud.contraseña(), usuario.passwordHash)) {
+            throw new BusinessException(401, "Correo o contraseña incorrectos");
+        }
+        // HU28: solo se revela que la cuenta está inhabilitada a quien ya demostró saber la contraseña.
+        if ("INHABILITADO".equalsIgnoreCase(usuario.estado)) {
+            throw new BusinessException(403, "Tu cuenta ha sido inhabilitada. Contacta al administrador");
+        }
+        if (!"ACTIVO".equalsIgnoreCase(usuario.estado)) {
             throw new BusinessException(401, "Correo o contraseña incorrectos");
         }
 
