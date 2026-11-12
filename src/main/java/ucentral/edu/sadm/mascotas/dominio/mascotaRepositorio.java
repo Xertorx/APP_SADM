@@ -19,7 +19,11 @@ public class mascotaRepositorio implements PanacheRepository<mascota> {
 
     // HU08-HU09: solo DISPONIBLES; especie y tamaño se filtran aquí si la lista no está vacía.
     public List<mascota> listarDisponibles(List<String> especies, List<String> tamanos) {
-        StringBuilder consulta = new StringBuilder("estado = 'DISPONIBLE'");
+        // HU27-HU28: se ocultan las mascotas de dadores INHABILITADOS (mascota.estado no cambia, así que
+        // al reactivar vuelven solas). Se usa subconsulta por id: "dador.estado" metería un inner join
+        // implícito y descartaría las mascotas antiguas sin dador.
+        StringBuilder consulta = new StringBuilder("estado = 'DISPONIBLE' and (dador is null or dador.id in "
+                + "(select u.id from usuario u where u.estado = 'ACTIVO'))");
         List<Object> params = new ArrayList<>();
         if (especies != null && !especies.isEmpty()) {
             params.add(especies);
