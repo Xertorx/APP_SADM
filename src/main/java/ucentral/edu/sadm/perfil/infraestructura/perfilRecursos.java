@@ -17,6 +17,8 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import ucentral.edu.sadm.common.infraestructure.ResponseApi;
 import ucentral.edu.sadm.perfil.aplicacion.perfilServicio;
+import ucentral.edu.sadm.perfil.aplicacion.ubicacionPerfilServicio;
+import ucentral.edu.sadm.perfil.infraestructura.dto.ubicacionPerfilEntidad;
 import ucentral.edu.sadm.perfil.dominio.fotoPerfil;
 import ucentral.edu.sadm.perfil.infraestructura.dto.perfilEntidad;
 import ucentral.edu.sadm.perfil.infraestructura.dto.perfilFormulario;
@@ -28,6 +30,9 @@ public class perfilRecursos {
 
     @Inject
     perfilServicio perfilServicio;
+
+    @Inject
+    ubicacionPerfilServicio ubicacionPerfilServicio;
 
     @Inject
     SecurityIdentity securityIdentity;
@@ -87,6 +92,32 @@ public class perfilRecursos {
         CacheControl sinCache = new CacheControl();
         sinCache.setNoCache(true);
         return Response.ok(foto.datos, foto.tipo_contenido).cacheControl(sinCache).build();
+    }
+
+    // ---- HU10: ubicación de referencia (respaldo cuando el usuario niega el GPS) ----
+
+    @GET
+    @Path("/ubicacion")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION", "ADMINISTRADOR"})
+    @Operation(summary = "Consultar mi ubicación de referencia", description = "404 si aún no la registraste")
+    public Response consultarUbicacion() {
+        return Response.ok(new ResponseApi<>(200, "Ubicación consultada",
+                ubicacionPerfilServicio.consultar(correoAutenticado()))).build();
+    }
+
+    @PUT
+    @Path("/ubicacion")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION", "ADMINISTRADOR"})
+    @Operation(
+            summary = "Guardar mi ubicación de referencia",
+            description = "Latitud -90..90, longitud -180..180, localidad opcional (código del catálogo). Se guarda a 3 decimales"
+    )
+    public Response guardarUbicacion(@Valid ubicacionPerfilEntidad datos) {
+        return Response.ok(new ResponseApi<>(200, "Ubicación guardada correctamente",
+                ubicacionPerfilServicio.guardar(datos, correoAutenticado()))).build();
     }
 
     private String correoAutenticado() {

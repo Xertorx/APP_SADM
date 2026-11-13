@@ -191,17 +191,26 @@ public class mascotaRecursos {
     @Operation(
             summary = "Buscar mascotas disponibles por nombre y filtros",
             description = "Solo mascotas DISPONIBLES. Sin distinguir mayúsculas ni tildes. Filtros distintos con lógica Y; "
-                    + "valores repetidos de especie/edad/tamano con lógica O; temperamento exige todos los marcados"
+                    + "valores repetidos de especie/edad/tamano con lógica O; temperamento exige todos los marcados. "
+                    + "HU10: si se envían lat y lon (las dos o ninguna) cada resultado trae distanciaKm y se ordena "
+                    + "de menor a mayor; las mascotas sin coordenadas van al final con distanciaKm = null"
     )
-    public List<mascotaDetalleEntidad> buscar(
+    public Response buscar(
             @QueryParam("nombre") String nombre,
             @QueryParam("especie") List<String> especie,
             @QueryParam("raza") String raza,
             @QueryParam("edad") List<String> edad,
             @QueryParam("tamano") List<String> tamano,
-            @QueryParam("temperamento") List<String> temperamento
+            @QueryParam("temperamento") List<String> temperamento,
+            @QueryParam("lat") Double lat,
+            @QueryParam("lon") Double lon
     ) {
-        return mascotaBusquedaServicio.buscar(nombre, especie, raza, edad, tamano, temperamento);
+        if (mascotaBusquedaServicio.usaGeolocalizacion(lat, lon)) {
+            return Response.ok(mascotaBusquedaServicio.buscarCercanas(
+                    nombre, especie, raza, edad, tamano, temperamento, lat, lon)).build();
+        }
+        // Sin lat/lon: comportamiento de HU08/HU09 intacto.
+        return Response.ok(mascotaBusquedaServicio.buscar(nombre, especie, raza, edad, tamano, temperamento)).build();
     }
 
     @GET

@@ -1,5 +1,7 @@
 package ucentral.edu.sadm.mascotas.infraestructura.dto;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -51,6 +53,15 @@ public record mascotaEntidad(
 
         @NotBlank(message = "La ubicación es obligatoria")
         @Size(min = 3, max = 100, message = "La ubicación debe tener entre 3 y 100 caracteres")
-        String ubicacion
+        String ubicacion,
+
+        // HU10 (opcionales): ubicación para búsquedas cercanas. Se envían las dos o ninguna.
+        @DecimalMin(value = "-90.0", message = "La latitud debe estar entre -90 y 90")
+        @DecimalMax(value = "90.0", message = "La latitud debe estar entre -90 y 90")
+        Double latitud,
+
+        @DecimalMin(value = "-180.0", message = "La longitud debe estar entre -180 y 180")
+        @DecimalMax(value = "180.0", message = "La longitud debe estar entre -180 y 180")
+        Double longitud
 ) {
 }

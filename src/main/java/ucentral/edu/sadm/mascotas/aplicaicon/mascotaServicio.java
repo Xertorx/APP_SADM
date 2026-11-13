@@ -15,6 +15,7 @@ import ucentral.edu.sadm.mascotas.dominio.exception.DadorNoEncontradoException;
 import ucentral.edu.sadm.mascotas.dominio.exception.FotoNoEncontradaException;
 import ucentral.edu.sadm.mascotas.dominio.exception.FotosInvalidasException;
 import ucentral.edu.sadm.mascotas.dominio.exception.MascotaNoEncontradaException;
+import ucentral.edu.sadm.mascotas.dominio.distanciaGeografica;
 import ucentral.edu.sadm.mascotas.dominio.fotoMascota;
 import ucentral.edu.sadm.mascotas.dominio.fotoMascotaRepositorio;
 import ucentral.edu.sadm.mascotas.dominio.mascota;
@@ -62,6 +63,10 @@ public class mascotaServicio {
     @Transactional
     public Long crear(mascotaEntidad mascotaEntidad, List<FileUpload> fotos, String correoDador) {
         validarFotos(fotos);
+        // HU10: las coordenadas son opcionales, pero si vienen deben venir las dos.
+        if ((mascotaEntidad.latitud() == null) != (mascotaEntidad.longitud() == null)) {
+            throw new BusinessException(400, "Debes enviar latitud y longitud");
+        }
 
         usuario dador = usuarioRepositorio.findByEmail(correoDador);
         if (dador == null) {
@@ -89,6 +94,8 @@ public class mascotaServicio {
                 dador,
                 mascotaEntidad.temperamento()
         );
+        mascota.latitud = distanciaGeografica.redondear(mascotaEntidad.latitud());
+        mascota.longitud = distanciaGeografica.redondear(mascotaEntidad.longitud());
         mascotaRepositorio.persist(mascota);
 
         int orden = 0;
