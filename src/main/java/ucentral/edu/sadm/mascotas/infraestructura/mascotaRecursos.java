@@ -45,8 +45,8 @@ public class mascotaRecursos {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
-            summary = "Publicar una mascota",
-            description = "Registra los datos y las fotos de una mascota; queda pendiente de aprobación"
+            summary = "Crear un borrador de mascota",
+            description = "Registra los datos y las fotos de una mascota; debe configurarse el proceso de selección antes de enviarla a revisión"
     )
     @RolesAllowed({"USUARIO", "FUNDACION"})
     public Response crear(@Valid @BeanParam mascotaFormulario formulario) {
@@ -57,10 +57,23 @@ public class mascotaRecursos {
         );
         ResponseApi<mascotaCreadaEntidad> response = new ResponseApi<>(
                 201,
-                "Tu publicación fue enviada y está en revisión por el administrador",
+                "La mascota fue guardada como borrador. Configura las etapas de selección y envíala a revisión.",
                 new mascotaCreadaEntidad(id)
         );
         return Response.status(Response.Status.CREATED).entity(response).build();
+    }
+
+    @POST
+    @Path("/{id}/publicar")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"USUARIO", "FUNDACION"})
+    @Operation(
+            summary = "Enviar una mascota a revisión",
+            description = "Solo permite enviar a revisión una mascota con las cuatro etapas de selección completas y 100 puntos distribuidos"
+    )
+    public Response publicar(@PathParam("id") Long id) {
+        mascotaServicio.publicar(id, securityIdentity.getPrincipal().getName());
+        return Response.ok(new ResponseApi<>(200, "La mascota fue enviada a revisión")).build();
     }
 
     @GET

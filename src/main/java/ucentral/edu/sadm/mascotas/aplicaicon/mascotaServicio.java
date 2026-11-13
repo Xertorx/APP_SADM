@@ -25,6 +25,7 @@ import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaEntidad;
 import ucentral.edu.sadm.postulacionesMascotas.dominio.postulacionRepositorio;
 import ucentral.edu.sadm.postulacionesMascotas.dominio.postulacion;
 import ucentral.edu.sadm.postulacionesMascotas.dominio.estadoPostulacion;
+import ucentral.edu.sadm.seleccion.aplicacion.configuracionSeleccionServicio;
 import ucentral.edu.sadm.mascotas.dominio.notificadorCancelacion;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaEliminacionEntidad;
 
@@ -55,6 +56,8 @@ public class mascotaServicio {
     postulacionRepositorio postulacionRepositorio;
     @Inject
     notificadorCancelacion notificadorCancelacion;
+    @Inject
+    configuracionSeleccionServicio configuracionSeleccionServicio;
 
     @Transactional
     public Long crear(mascotaEntidad mascotaEntidad, List<FileUpload> fotos, String correoDador) {
@@ -81,7 +84,7 @@ public class mascotaServicio {
                 mascotaEntidad.sexo(),
                 mascotaEntidad.historialSalud(),
                 mascotaEntidad.ubicacion(),
-                "PENDIENTE_APROBACION",
+                "BORRADOR_CONFIGURACION",
                 new Date(),
                 dador,
                 mascotaEntidad.temperamento()
@@ -94,6 +97,21 @@ public class mascotaServicio {
         }
 
         return mascota.id;
+    }
+
+    @Transactional
+    public void publicar(Long id, String correoDador) {
+        mascota mascota = buscarMascotaPropietario(id, correoDador);
+        if (!"BORRADOR_CONFIGURACION".equals(mascota.estado)) {
+            throw new BusinessException(
+                    409,
+                    "MASCOTA_NO_PUBLICABLE",
+                    "La mascota ya fue enviada a revisión o no está en borrador",
+                    "Solo una mascota en estado BORRADOR_CONFIGURACION puede enviarse a revisión"
+            );
+        }
+        configuracionSeleccionServicio.validarFinalizadaParaPublicar(id, correoDador);
+        mascota.estado = "PENDIENTE_APROBACION";
     }
 
     public mascotaEdicionEntidad consultarParaEditar(Long id, String correoDador) {
@@ -158,6 +176,7 @@ public class mascotaServicio {
         mascota mascota = mascotaRepositorio.findById(id);
         // HU27-HU28: el detalle público no muestra mascotas de un dador INHABILITADO.
         if (mascota == null || "ELIMINADA".equals(mascota.estado)
+                || "BORRADOR_CONFIGURACION".equals(mascota.estado)
                 || (mascota.dador != null && "INHABILITADO".equalsIgnoreCase(mascota.dador.estado))) {
             throw new MascotaNoEncontradaException();
         }
