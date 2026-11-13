@@ -3,10 +3,12 @@ package ucentral.edu.sadm.mascotas.aplicaicon;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import ucentral.edu.sadm.common.infraestructure.BusinessException;
+import ucentral.edu.sadm.mascotas.dominio.distanciaGeografica;
 import ucentral.edu.sadm.mascotas.dominio.mascota;
 import ucentral.edu.sadm.mascotas.dominio.mascotaRepositorio;
 import ucentral.edu.sadm.mascotas.dominio.rangoEdad;
 import ucentral.edu.sadm.mascotas.dominio.textoNormalizado;
+import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaBusquedaEntidad;
 import ucentral.edu.sadm.mascotas.infraestructura.dto.mascotaDetalleEntidad;
 
 import java.util.ArrayList;
@@ -44,6 +46,75 @@ public class mascotaBusquedaServicio {
             List<String> tamanos,
             List<String> temperamentos
     ) {
+        return filtrar(nombre, especies, raza, edades, tamanos, temperamentos).stream()
+                .sorted(PORMAS_RECIENTE)
+                .map(mascotaServicio::convertirDetalle)
+                .toList();
+    }
+
+    /**
+     * HU10: mismos filtros que buscar(...) pero con la ubicación del usuario. Cada resultado trae distanciaKm
+     * (Haversine, 1 decimal) y se ordena de menor a mayor; las mascotas sin coordenadas van al final con null.
+     * La distancia se calcula en Java sobre los resultados ya filtrados (volumen pequeño, sin PostGIS).
+     */
+    public List<mascotaBusquedaEntidad> buscarCercanas(
+            String nombre,
+            List<String> especies,
+            String raza,
+            List<String> edades,
+            List<String> tamanos,
+            List<String> temperamentos,
+            double lat,
+            double lon
+    ) {
+        return filtrar(nombre, especies, raza, edades, tamanos, temperamentos).stream()
+                .map(m -> new Object[]{m, distanciaA(m, lat, lon)})
+                .sorted(Comparator
+                        .comparing((Object[] par) -> (Double) par[1], Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(par -> (mascota) par[0], PORMAS_RECIENTE))
+                .map(par -> mascotaBusquedaEntidad.de(
+                        mascotaServicio.convertirDetalle((mascota) par[0]), (Double) par[1]))
+                .toList();
+    }
+
+    /**
+     * Devuelve true si la búsqueda debe usar geolocalización. Debe venir lat y lon, o ninguno
+     * (si solo viene uno, 400), y dentro de rango.
+     */
+    public boolean usaGeolocalizacion(Double lat, Double lon) {
+        if (lat == null && lon == null) {
+            return false;
+        }
+        if (lat == null || lon == null) {
+            throw new BusinessException(400, "Debes enviar latitud y longitud");
+        }
+        if (!distanciaGeografica.latitudValida(lat)) {
+            throw new BusinessException(400, "La latitud debe estar entre -90 y 90");
+        }
+        if (!distanciaGeografica.longitudValida(lon)) {
+            throw new BusinessException(400, "La longitud debe estar entre -180 y 180");
+        }
+        return true;
+    }
+
+    private Double distanciaA(mascota m, double lat, double lon) {
+        if (m.latitud == null || m.longitud == null) {
+            return null;
+        }
+        return distanciaGeografica.haversineKm(lat, lon, m.latitud, m.longitud);
+    }
+
+    private static final Comparator<mascota> PORMAS_RECIENTE = Comparator.comparing(
+            (mascota m) -> m.fecha_publicacion, Comparator.nullsLast(Comparator.reverseOrder()));
+
+    private List<mascota> filtrar(
+            String nombre,
+            List<String> especies,
+            String raza,
+            List<String> edades,
+            List<String> tamanos,
+            List<String> temperamentos
+    ) {
         List<String> especiesValidas = validar(especies, ESPECIES, "La especie debe ser PERRO, GATO u OTRO");
         List<String> tamanosValidos = validar(tamanos, TAMANOS, "El tamaño debe ser PEQUENO, MEDIANO o GRANDE");
         List<String> temperamentosValidos = validar(temperamentos, TEMPERAMENTOS, "Selecciona un temperamento válido");
@@ -60,9 +131,6 @@ public class mascotaBusquedaServicio {
                 .filter(m -> rangos.isEmpty() || coincideEdad(m, rangos))
                 .filter(m -> temperamentosValidos.isEmpty()
                         || (m.temperamento != null && m.temperamento.containsAll(temperamentosValidos)))
-                .sorted(Comparator.comparing((mascota m) -> m.fecha_publicacion,
-                        Comparator.nullsLast(Comparator.reverseOrder())))
-                .map(mascotaServicio::convertirDetalle)
                 .toList();
     }
 
