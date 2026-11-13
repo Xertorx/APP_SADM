@@ -10,6 +10,7 @@ import ucentral.edu.sadm.fundaciones.dominio.fundacionRepositorio;
 import ucentral.edu.sadm.mascotas.dominio.mascota;
 import ucentral.edu.sadm.mascotas.dominio.mascotaRepositorio;
 import ucentral.edu.sadm.postulacionesMascotas.dominio.postulacionRepositorio;
+import ucentral.edu.sadm.seleccion.dominio.configuracionSeleccionRepositorio;
 
 @ApplicationScoped
 public class PostulacionTestFixtures {
@@ -25,9 +26,15 @@ public class PostulacionTestFixtures {
     @Inject
     postulacionRepositorio postulacionRepositorio;
 
+    @Inject
+    configuracionSeleccionRepositorio configuracionSeleccionRepositorio;
+
     @Transactional
     public Datos preparar() {
         postulacionRepositorio.deleteAll();
+        configuracionSeleccionRepositorio.listAll()
+                .forEach(configuracionSeleccionRepositorio::delete);
+        configuracionSeleccionRepositorio.flush();
         mascotaRepositorio.deleteAll();
         fundacionRepositorio.deleteAll();
         usuarioRepositorio.deleteAll();
@@ -70,6 +77,12 @@ public class PostulacionTestFixtures {
     public void asignarDador(Long mascotaId, Long dadorId) {
         mascota mascota = mascotaRepositorio.findById(mascotaId);
         mascota.dador = usuarioRepositorio.findById(dadorId);
+    }
+
+    @Transactional
+    public void marcarBorradorConfiguracion(Long mascotaId) {
+        mascota mascota = mascotaRepositorio.findById(mascotaId);
+        mascota.estado = "BORRADOR_CONFIGURACION";
     }
 
     @Transactional

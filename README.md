@@ -17,6 +17,46 @@ Rutas públicas:
 | `GET /SADM/api/mascotas/mis-publicaciones` | Lista las mascotas del dador autenticado (`USUARIO` o `FUNDACION`). |
 | `GET /SADM/api/mascotas/{id}/editar` | Consulta, para el dador propietario, los datos precargables y advierte si existen postulaciones activas. |
 | `PUT /SADM/api/mascotas/{id}` | Actualiza una publicación del dador autenticado. Recibe `multipart/form-data` con `datos` (el mismo JSON validado al publicar) y, opcionalmente, `fotos` (JPG/PNG, hasta 6 de máximo 5 MB); si no se envían fotos, conserva las existentes. |
+| `POST /SADM/api/mascotas/crear` | Guarda la mascota como `BORRADOR_CONFIGURACION`; aún no la envía a revisión. |
+| `GET /SADM/api/mascotas/{id}/configuracion-seleccion` | Consulta el borrador de configuración (o una configuración vacía), solo para el dador propietario. |
+| `PUT /SADM/api/mascotas/{id}/configuracion-seleccion` | Crea o actualiza el borrador completo de las cuatro etapas. Los elementos con `id` se actualizan; los omitidos se eliminan. |
+| `POST /SADM/api/mascotas/{id}/configuracion-seleccion/finalizar` | Finaliza si cada etapa tiene elementos, los puntajes caben en cada etapa y los máximos suman exactamente 100. |
+| `POST /SADM/api/mascotas/{id}/publicar` | Envía a revisión únicamente una mascota con la configuración finalizada. |
+
+El `PUT` recibe las cuatro propiedades de etapa (`preguntas`, `documentos`, `entrevista`, `visitaDomiciliaria`), cada una con `puntajeMaximo` y su lista (`elementos` o `criterios`). Tipos de respuesta: `TEXTO`, `SI_NO`, `SELECCION_UNICA` y `SELECCION_MULTIPLE`. Ejemplo:
+
+```json
+{
+  "preguntas": {
+    "puntajeMaximo": 30,
+    "elementos": [{
+      "texto": "¿Cuántas horas estaría sola la mascota?",
+      "tipoRespuesta": "SELECCION_UNICA",
+      "puntaje": 10,
+      "opciones": ["Menos de 2", "De 2 a 5", "Más de 5"]
+    }]
+  },
+  "documentos": {
+    "puntajeMaximo": 20,
+    "elementos": [{
+      "nombre": "Documento de identidad",
+      "descripcion": "Copia legible del documento",
+      "obligatorio": true,
+      "puntajeMaximo": 20
+    }]
+  },
+  "entrevista": {
+    "puntajeMaximo": 25,
+    "criterios": [{"descripcion": "Experiencia previa con mascotas", "puntajeMaximo": 25}]
+  },
+  "visitaDomiciliaria": {
+    "puntajeMaximo": 25,
+    "criterios": [{"descripcion": "Espacio seguro y adecuado", "puntajeMaximo": 25}]
+  }
+}
+```
+
+La respuesta del `PUT` incluye los identificadores persistidos y la distribución (`puntajeDistribuido`, `puntosPendientes`, `puntosExcedentes`). El mismo formato con los IDs permite editar elementos sin cambiar su identidad. Los borradores pueden estar incompletos; solo `finalizar` los hace definitivos. La configuración queda bloqueada cuando la mascota se envía a revisión. Ejecuta manualmente `V4__configuracion_seleccion.sql` después de las migraciones V1-V3 en bases PostgreSQL existentes; en desarrollo, Hibernate actualiza el esquema.
 
 Después de crear una cuenta administrativa de confianza, un administrador de la base de datos puede asignarle el rol:
 
@@ -65,4 +105,4 @@ Los errores de negocio conservan el sobre `status`/`message`/`data`, con `codigo
 
 ## Migración de base de datos
 
-El proyecto no tiene Flyway/Liquibase; Hibernate conserva su estrategia de actualización de esquema. Antes de desplegar sobre una base existente, detén la aplicación, respalda la base y ejecuta las migraciones manualmente en orden: `V2__migrar_adoptantes_a_usuarios.sql` renombra o copia las cuentas antiguas, actualiza las claves foráneas y crea la tabla de fundaciones; `V3__identificacion_bigint.sql` amplía la identificación a `BIGINT`. La migración V1 de postulaciones referencia `usuario` y se aplica después de que existan las tablas `usuario` y `mascota`.
+El proyecto no tiene Flyway/Liquibase; Hibernate conserva su estrategia de actualización de esquema. Antes de desplegar sobre una base existente, detén la aplicación, respalda la base y ejecuta las migraciones manualmente en orden: `V2__migrar_adoptantes_a_usuarios.sql` renombra o copia las cuentas antiguas, actualiza las claves foráneas y crea la tabla de fundaciones; `V3__identificacion_bigint.sql` amplía la identificación a `BIGINT`; `V4__configuracion_seleccion.sql` crea las tablas de HU12. La migración V1 de postulaciones referencia `usuario` y se aplica después de que existan las tablas `usuario` y `mascota`.
