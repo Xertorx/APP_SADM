@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ucentral.edu.sadm.common.service.PasswordService;
 import ucentral.edu.sadm.fundaciones.dominio.fundacionRepositorio;
+import ucentral.edu.sadm.usuarios.aplicacion.usuarioServicio;
 import ucentral.edu.sadm.usuarios.dominio.rolUsuario;
 import ucentral.edu.sadm.usuarios.dominio.usuario;
 import ucentral.edu.sadm.usuarios.dominio.usuarioRepositorio;
@@ -30,6 +31,9 @@ class AutenticarseRecursosTest {
 
     @Inject
     PasswordService passwordService;
+
+    @Inject
+    usuarioServicio usuarioServicio;
 
     @BeforeEach
     @Transactional
@@ -76,6 +80,24 @@ class AutenticarseRecursosTest {
                 .when().post("/api/autenticacion/login")
                 .then()
                 .statusCode(401);
+    }
+
+    @Test
+    void restablecimientoLocalGuardaLaNuevaContrasenaComoHashVerificable() {
+        usuarioServicio.restablecerContrasenaLocal(" USUARIO@example.com ", "NuevaClave123");
+
+        usuario actualizado = usuarioRepositorio.findByEmail("usuario@example.com");
+        assertNotNull(actualizado);
+        org.junit.jupiter.api.Assertions.assertNotEquals("NuevaClave123", actualizado.passwordHash);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                passwordService.verificar("NuevaClave123", actualizado.passwordHash));
+
+        given()
+                .contentType("application/json")
+                .body(Map.of("correo", "usuario@example.com", "contraseña", "NuevaClave123"))
+                .when().post("/api/autenticacion/login")
+                .then()
+                .statusCode(200);
     }
 
     @Test

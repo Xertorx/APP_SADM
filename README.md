@@ -23,6 +23,27 @@ Rutas públicas:
 | `POST /SADM/api/mascotas/{id}/configuracion-seleccion/finalizar` | Finaliza si cada etapa tiene elementos, los puntajes caben en cada etapa y los máximos suman exactamente 100. |
 | `POST /SADM/api/mascotas/{id}/publicar` | Envía a revisión únicamente una mascota con la configuración finalizada. |
 
+### Restablecimiento local de contraseña
+
+Solo está disponible al ejecutar con `quarkus:dev`; no se incluye en el perfil de producción. El servidor local está configurado para escuchar en `localhost`. Envía el correo de la cuenta y la nueva contraseña:
+
+```powershell
+curl.exe -X POST http://localhost:8862/SADM/api/desarrollo/restablecer-contrasena -H "Content-Type: application/json" -d '{"correo":"usuario@example.com","contraseñaNueva":"NuevaClave123"}'
+```
+
+La contraseña se almacena como hash bcrypt. Esta ruta no requiere autenticación y solo debe usarse en desarrollo local.
+
+## Despliegue en Render con Docker
+
+El repositorio incluye un `Dockerfile` multi-stage y `render.yaml`. El Dockerfile compila con Java 25 y empaqueta Quarkus en modo JVM; Render construye la imagen y genera `JWT_SECRET`. El Blueprint no crea otra base de datos: solicita las variables secretas para conectar con tu PostgreSQL existente. La aplicación escucha en `0.0.0.0` y toma el puerto de `PORT`.
+
+1. Sube el repositorio a GitHub y en Render crea un **Blueprint** conectado al repositorio, usando `render.yaml`.
+2. Ingresa `DB_URL`, `DB_USERNAME` y `DB_PASSWORD` de tu base existente cuando Render los solicite. `DB_URL` debe tener formato JDBC, por ejemplo `jdbc:postgresql://host:5432/nombre_base`; agrega los parámetros SSL que exija tu proveedor.
+3. La base debe aceptar conexiones desde Render. Si está en `localhost` o en tu PC, Render no podrá alcanzarla; primero debes alojarla en un servidor accesible desde Render. La aplicación usará el esquema existente y sus datos, sin copiarlos a una base nueva.
+4. Al desplegar, Render muestra la URL pública. La API conserva el prefijo `/SADM`, por ejemplo `https://<servicio>.onrender.com/SADM/api/autenticacion/login`.
+
+No agregues `.env` al repositorio: está excluido del contexto Docker. Las credenciales de la base se guardan en la configuración privada de Render, no en `render.yaml`.
+
 El `PUT` recibe las cuatro propiedades de etapa (`preguntas`, `documentos`, `entrevista`, `visitaDomiciliaria`), cada una con `puntajeMaximo` y su lista (`elementos` o `criterios`). Tipos de respuesta: `TEXTO`, `SI_NO`, `SELECCION_UNICA` y `SELECCION_MULTIPLE`. Ejemplo:
 
 ```json

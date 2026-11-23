@@ -3,6 +3,7 @@ package ucentral.edu.sadm.usuarios.aplicacion;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import ucentral.edu.sadm.common.infraestructure.BusinessException;
 import ucentral.edu.sadm.common.service.PasswordService;
 import ucentral.edu.sadm.usuarios.dominio.rolUsuario;
 import ucentral.edu.sadm.usuarios.dominio.usuario;
@@ -45,6 +46,15 @@ public class usuarioServicio {
         usuario.fecha_registro = new Date();
         usuarioRepositorio.persist(usuario);
         return usuario.id;
+    }
+
+    @Transactional
+    public void restablecerContrasenaLocal(String correo, String contraseñaNueva) {
+        usuario usuario = usuarioRepositorio.findByEmail(normalizarCorreo(correo));
+        if (usuario == null) {
+            throw new BusinessException(404, "El usuario no existe");
+        }
+        usuario.passwordHash = passwordService.hash(contraseñaNueva);
     }
 
     public List<usuarioPublicoEntidad> consultarTodos() {
